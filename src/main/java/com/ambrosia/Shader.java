@@ -56,20 +56,4 @@ public class Shader {
 		glAttachShader(programId, this.id);
 		return this;
 	}
-	
-	private void resolveIncludes() {
-		int beginIndex = source.indexOf("#include ");;
-		
-		while (beginIndex != -1) {
-			int quoteBegin = source.indexOf("\"", beginIndex) + 1;
-			int quoteEnd = source.indexOf("\"", quoteBegin);
-			
-			String includePath = source.substring(quoteBegin, quoteEnd);
-			
-			String includeSource = ShaderParsingUtils.readShaderSource("/" + includePath);
-			source = source.substring(0, beginIndex) + includeSource + source.substring(quoteBegin);
-			
-			beginIndex = source.indexOf("#include ");
-		}
-	}
 }
