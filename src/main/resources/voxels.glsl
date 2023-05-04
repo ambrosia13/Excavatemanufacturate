@@ -23,7 +23,7 @@ bool evaluateHit(inout Hit hit, vec3 voxelPos, bool renderLeaves) {
 
     if(caseWater) voxelPos.y += 1;
     bool caseGrass = (voxelPos.y + 8.0 * fbmHash(voxelPos.xz * 0.02, 3, 2.4, 0.0)) < 80;
-    bool caseStone = voxelPos.y + 8.0 * pow(smoothstep(0.15, 0.4, fbmHash(voxelPos.xz * 0.05, 2, 3.0, 0.0)) * 2.0 - 1.0, 1.0) < 77;
+    bool caseStone = voxelPos.y + 4.0 *  pow(smoothstep(0.15, 0.4, fbmHash(voxelPos.xz * 0.05, 2, 3.0, 0.0)) * 2.0 - 1.0, 1.0) < 77;
 
     const float treeDensity = 0.998;
 
@@ -76,11 +76,13 @@ Hit raytraceDDA(vec3 rayPos, vec3 rayDir, int raytraceLength, bool renderLeaves)
     hit.pos = vec3(0.0);
     hit.success = false;
 
-//    if((rayPos + 10.0 * rayDir).y + u_cameraPosition.y > 90.0 && rayDir.y > 0.0) {
-//        return hit;
-//    }
+    if((rayPos + 10.0 * rayDir).y + u_cameraPosition.y > 90.0 && rayDir.y > 0.0) {
+        return hit;
+    }
 
     rayPos += u_cameraPosition;
+    
+    if(rayPos.y < 40.0) return hit;
 
     vec3 stepSizes = 1.0 / abs(rayDir);
     vec3 stepDir = sign(rayDir);
