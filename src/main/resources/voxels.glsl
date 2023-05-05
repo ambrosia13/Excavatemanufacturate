@@ -76,13 +76,13 @@ Hit raytraceDDA(vec3 rayPos, vec3 rayDir, int raytraceLength, bool renderLeaves)
     hit.pos = vec3(0.0);
     hit.success = false;
 
-    if((rayPos + 10.0 * rayDir).y + u_cameraPosition.y > 90.0 && rayDir.y > 0.0) {
-        return hit;
-    }
+//    if((rayPos + 10.0 * rayDir).y + u_cameraPosition.y > 90.0 && rayDir.y > 0.0) {
+//        return hit;
+//    }
 
     rayPos += u_cameraPosition;
     
-    if(rayPos.y < 40.0) return hit;
+    if(rayPos.y < 40.0 || rayPos.y > 100.0) return hit;
 
     vec3 stepSizes = 1.0 / abs(rayDir);
     vec3 stepDir = sign(rayDir);
@@ -105,7 +105,7 @@ Hit raytraceDDA(vec3 rayPos, vec3 rayDir, int raytraceLength, bool renderLeaves)
 
         hit.normal = stepAxis;
 
-        if(evaluateHit(hit, voxelPos + u_cameraPosition, renderLeaves)) {
+        if(evaluateHit(hit, voxelPos, renderLeaves)) {
             hit.pos = currentPos - u_cameraPosition;
             hit.normal *= -stepDir;
             break;

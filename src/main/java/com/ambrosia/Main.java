@@ -22,7 +22,7 @@ public class Main {
 	public long window;
 	
 	public Camera camera;
-	private float movementSpeed = 4.25f;
+	private float movementSpeed = 0.25f;
 	
 	// u_resolution
 	public int width = 800;
@@ -56,25 +56,6 @@ public class Main {
 				glfwSetWindowShouldClose(window, true);
 				//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			} else {
-				Vector3f forward = camera.getForwardVectorXZ();
-				Vector3f right = camera.getRightVector(forward);
-				
-				if(key == GLFW_KEY_LEFT_CONTROL) {
-					if(movementSpeed == 0.25f) movementSpeed = 300.0f;
-					else if(movementSpeed == 300.0f) movementSpeed = 0.25f;
-				}
-				
-				forward.mul(movementSpeed);
-				right.mul(movementSpeed);
-				
-				if(key == GLFW_KEY_W) camera.translatePos(forward, 1.0f);
-				if(key == GLFW_KEY_S) camera.translatePos(forward, -1.0f);
-				
-				if(key == GLFW_KEY_D) camera.translatePos(right, 1.0f);
-				if(key == GLFW_KEY_A) camera.translatePos(right, -1.0f);
-
-				if(key == GLFW_KEY_SPACE) camera.translatePos(0.0f, movementSpeed, 0.0f);
-				if(key == GLFW_KEY_LEFT_SHIFT) camera.translatePos(0.0f, -movementSpeed, 0.0f);
 			}
 		});
 		
@@ -138,6 +119,19 @@ public class Main {
 		while(!glfwWindowShouldClose(window)) {
 			Cursor.update();
 			camera.updatePitchAndYaw(1.0f);
+			
+			Vector3f forward = camera.getForwardVectorXZ().mul(movementSpeed);
+			Vector3f right = camera.getRightVector(forward).mul(movementSpeed);
+			
+			if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) movementSpeed = 3.0f;
+			else movementSpeed = 0.25f;
+			
+			if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.translatePos(forward, 1.0f);
+			if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.translatePos(forward, -1.0f);
+			if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.translatePos(right, 1.0f);
+			if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.translatePos(right, -1.0f);
+			if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) camera.translatePos(0.0f, movementSpeed, 0.0f);
+			if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) camera.translatePos(0.0f, -movementSpeed, 0.0f);
 			
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glUseProgram(program);

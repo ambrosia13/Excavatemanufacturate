@@ -25,7 +25,10 @@ void main() {
     
     color = mix(vec3(0.8), vec3(0.15, 0.35, 1.0), pow(clamp(dir.y, 0.0, 1.0), 1.0 / 2.0));
     
-    Hit hit = raytraceDDA(vec3(0.0), dir, 200, false);
+    float startDist = rayPlaneIntersection(vec3(0.0), dir, vec3(0.0, 1.0, 0.0), 100.0);
+    vec3 startPos = dir * startDist;
+    
+    Hit hit = raytraceDDA(startPos, dir, 200, false);
     if(hit.success) {
         color = getVoxelColor(hit) * (hit.normal.y * 0.25 + 0.75) * 0.15;
         

@@ -14,3 +14,8 @@ mat4 rotation3d(vec3 axis, float angle) {
         0.0,                                0.0,                                0.0,                                1.0
     );
 }
+
+float rayPlaneIntersection(vec3 rayPos, vec3 rayDir, vec3 planeNormal, float planeHeight) {
+    return -(dot(rayPos, planeNormal) + planeHeight) / dot(rayDir, planeNormal);
+}
+
