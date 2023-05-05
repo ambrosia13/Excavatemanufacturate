@@ -105,7 +105,7 @@ Hit raytraceDDA(vec3 rayPos, vec3 rayDir, int raytraceLength, bool renderLeaves)
 
         hit.normal = stepAxis;
 
-        if(evaluateHit(hit, voxelPos, renderLeaves)) {
+        if(evaluateHit(hit, voxelPos + u_cameraPosition, renderLeaves)) {
             hit.pos = currentPos - u_cameraPosition;
             hit.normal *= -stepDir;
             break;

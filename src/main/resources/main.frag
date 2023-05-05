@@ -13,11 +13,12 @@ layout(location = 0) out vec4 fragColor;
 
 void main() {
     vec2 texcoord = gl_FragCoord.xy / u_resolution;
-    texcoord.x *= u_resolution.x / u_resolution.y;
+    texcoord = texcoord * 2.0 - 1.0; // center the camera in the screen
+    texcoord.x *= float(u_resolution.x) / u_resolution.y; // aspect ratio correction
     
     vec3 color = vec3(0.0);
     
-    vec3 dir = normalize(vec3(texcoord - 0.5, 0.5));
+    vec3 dir = normalize(vec3(texcoord, 1.0));
     
     dir = (vec4(dir, 1.0) * rotation3d(vec3(-1.0, 0.0, 0.0), radians(u_pitch))).xyz;
     dir = (vec4(dir, 1.0) * rotation3d(vec3(0.0, 1.0, 0.0), radians(u_yaw))).xyz;
