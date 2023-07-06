@@ -8,13 +8,13 @@ public class Camera {
 	private float pitch;
 	private float yaw;
 	
-	public final Vector3f cameraPosition;
+	public final Vector3f pos;
 	
 	public Camera() {
 		pitch = 0.0f;
 		yaw = 0.0f;
 		
-		cameraPosition = new Vector3f(0.0f, 90.0f, 0.0f);
+		pos = new Vector3f(0.0f, 90.0f, 0.0f);
 	}
 	
 	public Vector3f getForwardVector() {
@@ -53,7 +53,7 @@ public class Camera {
 	
 	public void translatePos(Vector3f vector, float mag) {
 		final float[] originalValues = new float[] {vector.x, vector.y, vector.z};
-		cameraPosition.add(vector.mul(mag));
+		pos.add(vector.mul(mag));
 		
 		vector.x = originalValues[0];
 		vector.y = originalValues[1];
@@ -66,9 +66,6 @@ public class Camera {
 		translatePos(new Vector3f(x, y, z));
 	}
 	
-	public Vector3f getPos() {
-		return cameraPosition;
-	}
 	public float getPitch() {
 		return pitch;
 	}

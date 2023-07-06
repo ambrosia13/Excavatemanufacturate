@@ -1,11 +1,18 @@
 #include "noise.glsl"
 
+/*
+		public static final int AIR = 0;
+		public static final int GRASS = 1;
+		public static final int STONE = 2;
+		public static final int WATER = 3;
+
+*/
 const int ID_GRASS = 1;
-const int ID_DIRT = 2;
-const int ID_STONE = 3;
-const int ID_WATER = 4;
-const int ID_LOG = 5;
-const int ID_LEAVES = 6;
+const int ID_DIRT = 20;
+const int ID_STONE = 2;
+const int ID_WATER = 3;
+const int ID_LOG = 4;
+const int ID_LEAVES = 5;
 
 struct Hit {
     bool success;
@@ -16,62 +23,25 @@ struct Hit {
     int id;
 };
 
-bool evaluateHit(inout Hit hit, vec3 voxelPos, bool renderLeaves) {
-    if(voxelPos.y >= 86) return false;
+bool outOfVoxelBounds(in ivec3 voxelPos) {
+    return modNoWrap(voxelPos, worldTextureSize) != voxelPos;
+}
 
-    bool caseWater = voxelPos.y < 74;
-
-    if(caseWater) voxelPos.y += 1;
-    bool caseGrass = (voxelPos.y + 8.0 * fbmHash(voxelPos.xz * 0.02, 3, 2.4, 0.0)) < 80;
-    bool caseStone = voxelPos.y + 4.0 *  pow(smoothstep(0.15, 0.4, fbmHash(voxelPos.xz * 0.05, 2, 3.0, 0.0)) * 2.0 - 1.0, 1.0) < 77;
-
-    const float treeDensity = 0.998;
-
-    #ifdef TREES
-        bool caseLog = smoothHash(voxelPos.xz) > treeDensity && voxelPos.y < 83;
-        bool caseLeaves = false;
-    
-        if(renderLeaves) {
-            for(int i = -1; i <= 1; i++) {
-                for(int j = -1; j <= 1; j++) {
-                    for(int k = -1; k <= 1; k++) {
-                        vec3 leavesPos = voxelPos + vec3(i, j, k);
-    
-                        if(smoothHash(leavesPos.xz) > treeDensity && leavesPos.y < 85 && leavesPos.y > 82) {
-                            caseLeaves = true;
-                            break;
-                        }
-                    }
-    
-                    if(caseLeaves) break;
-                }
-    
-                if(caseLeaves) break;
-            }
-        }
-    #else
-        bool caseLeaves = false; 
-        bool caseLog = false;
-    #endif
-
-	hit.success = caseGrass || caseWater || caseStone || caseLog || caseLeaves;
-
-    if(caseGrass) {
-        hit.id = ID_GRASS;
-    } else if(caseWater) {
-        hit.id = ID_WATER;
-    } else if(caseStone) {
-        hit.id = ID_STONE;
-    } else if(caseLog) {
-        hit.id = ID_LOG;
-    } else if(caseLeaves) {
-        hit.id = ID_LEAVES;
+bool evaluateHit(inout Hit hit, in ivec3 voxelPos) {
+    if(outOfVoxelBounds(voxelPos)) {
+        hit.success = false;
+        return hit.success;
     }
-
+    
+    uint worldSample = texelFetch(u_worldTexture, voxelPos, 0).r;
+    
+    hit.success = worldSample != 0u;
+    hit.id = int(worldSample);
+    
     return hit.success;
 }
 
-Hit raytraceDDA(vec3 rayPos, vec3 rayDir, int raytraceLength, bool renderLeaves) {
+Hit raytraceDDA(vec3 startPos, vec3 endPos, int raytraceLength, bool renderLeaves) {
     Hit hit;
     hit.pos = vec3(0.0);
     hit.success = false;
@@ -80,9 +50,10 @@ Hit raytraceDDA(vec3 rayPos, vec3 rayDir, int raytraceLength, bool renderLeaves)
 //        return hit;
 //    }
 
-    rayPos += u_cameraPosition;
+    vec3 rayPos = startPos;
+    vec3 rayDir = normalize(endPos - startPos);
     
-    if(rayPos.y < 40.0 || rayPos.y > 100.0) return hit;
+    rayPos += u_cameraPosition;
 
     vec3 stepSizes = 1.0 / abs(rayDir);
     vec3 stepDir = sign(rayDir);
@@ -105,7 +76,8 @@ Hit raytraceDDA(vec3 rayPos, vec3 rayDir, int raytraceLength, bool renderLeaves)
 
         hit.normal = stepAxis;
 
-        if(evaluateHit(hit, voxelPos, renderLeaves)) {
+        if(outOfVoxelBounds(voxelPos)) continue;
+        if(evaluateHit(hit, voxelPos)) {
             hit.pos = currentPos - u_cameraPosition;
             hit.normal *= -stepDir;
             break;

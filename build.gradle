@@ -14,6 +14,10 @@ project.ext.lwjglNatives = "natives-windows"
 
 repositories {
     mavenCentral()
+    
+    maven {
+        url "https://repo.spongepowered.org/repository/maven-public/"
+    }
 }
 
 dependencies {
@@ -31,6 +35,8 @@ dependencies {
     runtimeOnly "org.lwjgl:lwjgl-opengl::$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-shaderc::$lwjglNatives"
     implementation "org.joml:joml:${jomlVersion}"
+
+    implementation "org.spongepowered:noise:2.0.0-SNAPSHOT"
 }
 
 test {

@@ -19,3 +19,6 @@ float rayPlaneIntersection(vec3 rayPos, vec3 rayDir, vec3 planeNormal, float pla
     return -(dot(rayPos, planeNormal) + planeHeight) / dot(rayDir, planeNormal);
 }
 
+ivec3 modNoWrap(ivec3 x, ivec3 y) {
+    return (x % y + y) % y;
+}

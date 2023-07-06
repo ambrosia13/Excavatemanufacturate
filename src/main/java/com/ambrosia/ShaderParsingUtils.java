@@ -19,6 +19,9 @@ public class ShaderParsingUtils {
 		} catch(IOException e) {
 			e.printStackTrace();
 			return null;
+		} catch(NullPointerException e) {
+			System.err.println("Shader location not found: " + location);
+			return null;
 		}
 	}
 	

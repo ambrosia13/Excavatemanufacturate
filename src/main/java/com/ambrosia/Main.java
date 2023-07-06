@@ -1,15 +1,10 @@
 package com.ambrosia;
 
-import org.joml.*;
-
-import org.joml.Math;
-import org.lwjgl.*;
+import com.ambrosia.world.World;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.*;
 
 import static org.lwjgl.glfw.Callbacks.*;
@@ -23,6 +18,10 @@ public class Main {
 	
 	public Camera camera;
 	private float movementSpeed = 0.25f;
+	
+	public World world;
+	
+	public InputHandler inputHandler;
 	
 	// u_resolution
 	public int width = 800;
@@ -50,14 +49,9 @@ public class Main {
 		
 		Cursor.init(window);
 		camera = new Camera();
-		
-		glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
-			if(key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
-				glfwSetWindowShouldClose(window, true);
-				//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			} else {
-			}
-		});
+		world = new World(2);
+		world.generate();
+		inputHandler = new InputHandler(camera, window);
 		
 		try(MemoryStack stack = stackPush()) {
 			IntBuffer pWidth = stack.mallocInt(1);
@@ -118,20 +112,24 @@ public class Main {
 		
 		while(!glfwWindowShouldClose(window)) {
 			Cursor.update();
-			camera.updatePitchAndYaw(1.0f);
+			camera.updatePitchAndYaw(1.0f); // looking around
+			movementSpeed = inputHandler.handleInput(movementSpeed); // moving around
 			
-			Vector3f forward = camera.getForwardVectorXZ().mul(movementSpeed);
-			Vector3f right = camera.getRightVector(forward).mul(movementSpeed);
+			// Generating world texture
+			int worldTextureId = glGenTextures();
+			glBindTexture(GL_TEXTURE_3D, worldTextureId);
 			
-			if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) movementSpeed = 3.0f;
-			else movementSpeed = 0.25f;
+			glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			
-			if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.translatePos(forward, 1.0f);
-			if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.translatePos(forward, -1.0f);
-			if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.translatePos(right, 1.0f);
-			if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.translatePos(right, -1.0f);
-			if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) camera.translatePos(0.0f, movementSpeed, 0.0f);
-			if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) camera.translatePos(0.0f, -movementSpeed, 0.0f);
+			final int size = world.viewDistance * 2 + 1;
+			glTexImage3D(GL_TEXTURE_3D, 0, GL_R8UI, size, size, size, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, world.asIntBuffer());
+			int textureUnit = 5;
+			glActiveTexture(GL_TEXTURE0 + textureUnit);
+			glBindTexture(GL_TEXTURE_3D, worldTextureId);
 			
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glUseProgram(program);
@@ -140,14 +138,17 @@ public class Main {
 			glUniform2i(0, width, height);
 			glUniform1f(1, camera.getPitch());
 			glUniform1f(2, camera.getYaw());
-			glUniform3f(3, camera.getPos().x, camera.getPos().y, camera.getPos().z);
+			glUniform3f(3, camera.pos.x, camera.pos.y, camera.pos.z);
 			glUniform1i(4, randomSeed); // random seed to use in shader
+			glUniform1i(5, textureUnit);
 			
 			glBindVertexArray(vao);
 			glDrawArrays(GL_QUADS, 0, 4);
 			
 			glfwSwapBuffers(window);
 			glfwPollEvents();
+			
+			glDeleteTextures(worldTextureId);
 		}
 	}
 	
